@@ -38,11 +38,13 @@ return [
     |
     */
 
+    // ¿Cómo voy a saber si alguien está autenticado y dónde voy a guardar esa autenticación?
     'guards' => [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // usuario autenticado
         'admin' => [
             'driver' => 'session',
             'provider' => 'admins'
@@ -65,16 +67,16 @@ return [
     | Supported: "database", "eloquent"
     |
     */
-
+    // ¿De dónde saco los datos del usuario?
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
+
         'admins' => [
             'driver' => 'eloquent',
             'model' => Admin::class
-
         ]
 
         // 'users' => [

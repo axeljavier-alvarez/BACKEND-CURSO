@@ -13,6 +13,7 @@ class AdminMiddleware
      *
      * @param  Closure(Request): (Response)  $next
      */
+    // si esta autenticado admin guard sino regresa a admin.login
     public function handle(Request $request, Closure $next): Response
     {
         // return $next($request);

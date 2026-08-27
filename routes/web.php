@@ -9,5 +9,4 @@ Route::prefix('admin')->middleware('admin')->group(function(){
 Route::get('dashboard', [AdminController::class, 'index'])->name('admin.index');
 Route::post('logout', [AdminController::class, 'logout'])->name('admin.logout');
 
-
 });
