@@ -16,12 +16,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
     <title>
-        <!-- @yield('title') -->
+         @yield('title') 
     </title>
 </head>
 <body class="bg-light">
     <div class="container-fluid">
-        <!-- @yield('content') -->
+        @yield('content')
     </div>
     <!-- Jquery JS -->
     <script
@@ -35,7 +35,7 @@
     <!-- Sweet alert js -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Alerts -->
-    <!-- @session('success')
+   @session('success')
         <script>
             Swal.fire({
                 position: "top-end",
@@ -45,8 +45,8 @@
                 timer: 2500
             });
         </script> 
-    @endsession -->
-    <!-- @session('error')
+    @endsession
+   @session('error')
         <script>
             Swal.fire({
                 position: "top-end",
@@ -56,7 +56,7 @@
                 timer: 2500
             });
         </script>
-    @endsession -->
+    @endsession 
     <script>
         $(document).ready(function() {
             //datatables initialization

@@ -37,7 +37,7 @@ class AdminController extends Controller
             "subscriptions" => $subscriptions
         ]);
     }
-
+    /* */
     public function login()
     {
         if(auth()->guard('admin')->check()){
