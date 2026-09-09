@@ -77,7 +77,7 @@ class ProductController extends Controller
         //
     }
 
-    /* Upload and save product image */
+    /* 14:27 voy alli */
     public function saveImage($file)
     {
         $image_name = time() . '_' . $file->getClientOriginalName();
