@@ -76,4 +76,12 @@ class ProductController extends Controller
     {
         //
     }
+
+    /* Upload and save product image */
+    public function saveImage($file)
+    {
+        $image_name = time() . '_' . $file->getClientOriginalName();
+        $file->storeAs('images/products', $image_name, 'public');
+        return 'storage/images/products/' . $image_name;
+    }
 }
