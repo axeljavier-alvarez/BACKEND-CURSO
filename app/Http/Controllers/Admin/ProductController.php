@@ -6,33 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Request\AddProductRequest;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        return view ('admin.products.index')->with([
+        return view('admin.products.index')->with([
             'products' => Product::with(['positives', 'negatives'])->latest()->get()
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view('admin.products.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(AddProductRequest $request)
     {
-        if($request->validated()){
+        if ($request->validated()) {
             $data = $request->validated();
             $data['image_path'] = $this->saveImage($request->file('image_path'));
             $product = Product::create($data);
@@ -45,43 +43,125 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
+
     public function show(Product $product)
     {
-        //
+        abort(404);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+
     public function edit(Product $product)
     {
-        //
+        return view('admin.products.edit')->with([
+            'product' => $product
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Product $product)
+
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        //
+        if ($request->validated()) {
+            $data = $request->validated();
+            if($request->has('image_path')){
+                // remove the product old image
+                $this->removeProductImageF($product->image_path);
+                // save the new product image
+                $data['image_path'] = $this->saveImage($request->file('image_path'));
+                // add the qr code to the new image
+                $this->mergeProductImageWithQRCode($product);
+            }
+            $product = update($data);
+            return redirect()->route('admin.products.index')->with([
+                'success' => 'Product updated successfully.'
+            ]);
+        }
+
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(Product $product)
     {
-        //
+        $this->removeProductOldImage($product->image_path);
+
     }
 
-    /* 14:27 voy alli */
+    /* 14:27 voy alli 
+    Upload and save product image */
     public function saveImage($file)
     {
         $image_name = time() . '_' . $file->getClientOriginalName();
         $file->storeAs('images/products', $image_name, 'public');
         return 'storage/images/products/' . $image_name;
     }
+
+    /* Save the product qr code */
+    public function saveProductQRCode($productId)
+    {
+        // crear el generador de qr   
+        $builder = new Builder(
+            writer: new PngWriter(),
+            writerOptions: [],
+            validateResult: false,
+            data: $productId,
+            size:  60
+            
+        );
+        // generar el codigo qr
+        $qrCode = $builder->build();
+        // definir la path
+        $qrCodePath = 'qr_codes/'.$productId.'.png';
+        // save the qr code en el disco "public"
+        Storage::disk('public')->put($qrCodePath, $qrCode->getString());
+        // return the file path
+        return  'storage/'.$qrCodePath;
+    }
+
+    /* Merge the product image with the QR code */
+    public function mergeProductImageWithQRCode(Product $product)
+    {
+       // get the product image ya sea en png o jpeg
+       $productImagePath = $product->image_path;
+
+       // check the type of the product image
+       if(mime_content_type($productImagePath) === 'image/png'){
+        $createProductImage = imagecreatefrompng($productImagePath);
+       } else if(mime_content_type($productImagePath) === 'image/jpeg'){
+        $createProductImage = imagecreatefromjpeg($productImagePath);
+       } 
+       // get the qr code
+       $qrCodePath = $product->qr_code_path;
+       $qrImage = imageCreatefrompng($qrCodePath);
+
+       // get the dimensions of the images
+       $productWidth = imagesx($createProductImage);
+       $productHeight = imagesy($createProductImage);
+       $qrWidth = imagesx($qrImage);
+       $qrHeight = imagesy($qrImage);
+
+       // calculate the position to center the qr code in the product image
+       $dstX = ($productWidth  - $qrWidth) / 2;
+       $dstY = ($productHeight  - $qrHeight) / 2;
+
+       // add the qr code to the product image
+
+       imagecopy($createProductImage, $qrImage, $dstX, $dstY, 0, 0, $qrWidth, $qrHeight);
+
+       // we do not lose the background of png images
+       imagesavealpha($createProductImage, true);
+
+       imagepng($createProductImage, $product->image_path);
+       // free the memory
+       imagedestroy($createProductImage);
+       imagedestroy($qrImage);
+    }
+
+    /* remove the product old image */
+    public function removeProductOldImage($file)
+    {
+        $path = public_path($file);
+        if(File::exists($path)){
+             File::delete($path);
+        }
+    }
+
 }
