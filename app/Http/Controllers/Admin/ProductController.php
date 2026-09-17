@@ -64,7 +64,7 @@ class ProductController extends Controller
             $data = $request->validated();
             if($request->has('image_path')){
                 // remove the product old image
-                $this->removeProductImageF($product->image_path);
+                $this->removeProductImageFromStorage($product->image_path);
                 // save the new product image
                 $data['image_path'] = $this->saveImage($request->file('image_path'));
                 // add the qr code to the new image
@@ -81,7 +81,17 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        $this->removeProductOldImage($product->image_path);
+        // remove the product image
+        $this->removeProductImageFromStorage($product->image_path);
+        // remote the product qr code
+        $this->removeProductImageFromStorage($product->qr_code_path);
+        // delete 
+        $product->delete();
+
+        return redirect()->route('admin.products.index')->with([
+                'success' => 'Product deleted successfully.'
+        ]);
+
 
     }
 
@@ -156,7 +166,7 @@ class ProductController extends Controller
     }
 
     /* remove the product old image */
-    public function removeProductOldImage($file)
+    public function removeProductImageFromStorage($file)
     {
         $path = public_path($file);
         if(File::exists($path)){
